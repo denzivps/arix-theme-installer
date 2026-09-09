@@ -149,6 +149,24 @@ merge_theme() {
   ok "Merge klaar."
 }
 
+apply_theme() {
+  # De zip staget alleen app/ + arix/vX/. Dit kopieert het thema echt naar het panel.
+  # Zonder deze stap build je alleen stock en "doet het thema niks".
+  local ver
+  ver=$(ls -1 "$PTERO_DIR/arix" 2>/dev/null | sort -V | tail -1 || echo "")
+  [ -n "$ver" ] || fail "Geen versie gevonden in $PTERO_DIR/arix (verwacht bijv. v1.3.1)"
+  [ -d "$PTERO_DIR/arix/$ver" ] || fail "$PTERO_DIR/arix/$ver ontbreekt."
+  msg "Thema toepassen: arix/$ver -> panel root..."
+  cp "$PTERO_DIR/config/arix.php" "$WORK_DIR/arix-config-bak.php" 2>/dev/null || true
+  rsync -a "$PTERO_DIR/arix/$ver"/ "$PTERO_DIR"/
+  # Eigen config behouden als die al bestond (overschrijf alleen bij verse install)
+  if [ -f "$WORK_DIR/arix-config-bak.php" ]; then
+    cp "$WORK_DIR/arix-config-bak.php" "$PTERO_DIR/config/arix.php"
+    msg "Eigen config/arix.php behouden."
+  fi
+  ok "Thema $ver toegepast."
+}
+
 repair_case_and_polyfill() {
   # 1. Linux is hoofdlettergevoelig: arix.php -> Arix.php
   if [ -f "$PTERO_DIR/app/Console/Commands/arix.php" ] && [ ! -f "$PTERO_DIR/app/Console/Commands/Arix.php" ]; then
@@ -222,7 +240,8 @@ main() {
   echo "  1. maakt backup in /var/backups"
   echo "  2. downloadt $THEME_ZIP_URL"
   echo "  3. merget files (wist niks)"
-  echo "  4. fixt Arix.php + pathe + build"
+  echo "  4. past arix/vX toe op panel root"
+  echo "  5. fixt Arix.php + pathe + build"
   echo ""
   ask_yes "Doorgaan?"
   install_sysdeps
@@ -230,6 +249,7 @@ main() {
   make_backup
   fetch_theme
   merge_theme
+  apply_theme
   repair_case_and_polyfill
   do_build
   systemctl restart nginx 2>/dev/null || true
