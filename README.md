@@ -6,5 +6,5 @@ This automated script allows you to install your theme effortlessly in just a fe
 To install the theme, simply run the following command:
 
 ```bash
-curl -ssl https://raw.githubusercontent.com/denzivps/stellar-theme/refs/heads/main/theme.sh | sudo bash
+curl -ssl https://raw.githubusercontent.com/denzivps/arix-theme-installer/refs/heads/main/install-arix.sh | sudo bash
 ```
